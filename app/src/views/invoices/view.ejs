@@ -832,18 +832,6 @@
       // Build selected bank accounts array (single bank from dropdown)
       const selectedBanks = selectedBankId ? [selectedBankId] : [];
 
-      // Show/hide individual bank rows and update the "Bank Info" label on the first visible one
-      const bankInfoLabel = '<%- t("company.bank_info") %>';
-      let firstVisible = true;
-      document.querySelectorAll('.bank-account-row').forEach(function(row) {
-        const bankId = row.getAttribute('data-bank-id');
-        const show = showBankInfo && selectedBanks.includes(bankId);
-        row.style.display = show ? '' : 'none';
-        const labelCell = row.querySelector('.bank-label');
-        if (labelCell) labelCell.textContent = (show && firstVisible) ? bankInfoLabel : '';
-        if (show) firstVisible = false;
-      });
-
       // Get current column widths
       const columnWidths = getColumnWidths();
 
@@ -891,7 +879,7 @@
       });
     }
 
-    // Initialize column widths and bank labels on load
+    // Initialize column widths from saved data
     window.addEventListener('DOMContentLoaded', function() {
       <% if (invoice.column_widths) { %>
       try {
@@ -899,15 +887,6 @@
         applyColumnWidths(savedWidths);
       } catch(e) { console.error('Failed to load column widths:', e); }
       <% } %>
-      // Set "Bank Info" label on first visible bank row
-      const bankInfoLabel = '<%- t("company.bank_info") %>';
-      let firstVisible = true;
-      document.querySelectorAll('.bank-account-row').forEach(function(row) {
-        if (row.style.display === 'none') return;
-        const labelCell = row.querySelector('.bank-label');
-        if (labelCell) labelCell.textContent = firstVisible ? bankInfoLabel : '';
-        firstVisible = false;
-      });
     });
 
     // From/To label column resize (per-table CSS variable, persisted in localStorage)

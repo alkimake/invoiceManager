@@ -1,0 +1,79 @@
+<%#
+  9TFox invoice template styling.
+  Ported from the imported "9tfox-design-system" (Tonal Depth & The Ignition
+  Core): a charcoal void with a single high-energy orange accent, Space Grotesk
+  headlines, Inter body, JetBrains Mono readouts. Korean glyphs fall back to
+  Pretendard (already loaded by the page). Only applied to the three
+  `tpl-9tfox-*` templates; the `default` template is untouched.
+%>
+<% if (typeof isNineTfox !== 'undefined' && isNineTfox) { %>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<% } %>
+<style>
+  /* ---- 9TFox brand tokens (scoped to the invoice card) ---- */
+  .tpl-9tfox {
+    --primary: #ff6d00;
+    --primary-hover: #ff8c00;
+    --tertiary: #ffb380;
+    --on-primary: #000000;
+    --surface: #0a0a0a;
+    --surface-container-low: #0f0f0f;
+    --surface-container: #141414;
+    --surface-container-high: #1a1a1a;
+    --surface-container-highest: #262626;
+    --on-surface: #ffffff;
+    --on-surface-variant: #b3b3b3;
+    --on-surface-muted: #666666;
+    --outline-variant: #333333;
+    --hairline: rgba(255, 255, 255, 0.05);
+    --font-headline: "Space Grotesk", "Pretendard", system-ui, sans-serif;
+    --font-body: "Inter", "Pretendard", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, "Pretendard", monospace;
+    color: var(--on-surface-variant);
+    font-family: var(--font-body);
+  }
+  /* On screen, center the fixed-width A4-ish card and give it depth */
+  .tpl-9tfox .tf-card {
+    width: 794px;
+    max-width: 100%;
+    margin: 0 auto;
+    background: var(--surface);
+    color: var(--on-surface-variant);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  }
+  .tpl-9tfox .tf-mono { font-family: var(--font-mono); }
+  .tpl-9tfox .tf-head { font-family: var(--font-headline); }
+  .tpl-9tfox .tf-accent { color: var(--primary); }
+  .tpl-9tfox .tf-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--primary);
+  }
+  .tpl-9tfox .tf-label--muted { color: var(--on-surface-muted); }
+  .tpl-9tfox .tf-label--readout { color: var(--tertiary); }
+  .tpl-9tfox .grid-bp {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .tpl-9tfox a { color: var(--primary); text-decoration: none; }
+
+  /* Keep the design intact regardless of the app's light/dark toggle */
+  .tpl-9tfox, .tpl-9tfox * { border-color: var(--hairline); }
+
+  /* ---- Print: preserve the branded dark design ---- */
+  @media print {
+    body[class*="tpl-page-9tfox"] { background: #ffffff !important; }
+    .tpl-9tfox, .tpl-9tfox * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .tpl-9tfox .tf-card {
+      width: 100% !important;
+      box-shadow: none !important;
+    }
+  }
+</style>

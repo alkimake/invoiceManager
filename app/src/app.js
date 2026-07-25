@@ -14,6 +14,7 @@ const backupRoutes = require('./routes/backup');
 const companyRoutes = require('./routes/companies');
 const clientRoutes = require('./routes/clients');
 const templateRoutes = require('./routes/templates');
+const invoiceTemplateRoutes = require('./routes/invoiceTemplates');
 const invoiceRoutes = require('./routes/invoices');
 const emailRoutes = require('./routes/email');
 
@@ -68,6 +69,7 @@ app.use('/backup', backupRoutes);
 app.use('/companies', companyRoutes);
 app.use('/clients', clientRoutes);
 app.use('/templates', templateRoutes);
+app.use('/invoice-templates', invoiceTemplateRoutes);
 app.use('/invoices', invoiceRoutes);
 app.use('/email', emailRoutes);
 

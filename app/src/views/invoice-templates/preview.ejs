@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= t('invoiceTemplate.preview') %> · <%= templateId %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <style>
+    body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; margin: 0; background: #e5e7eb; }
+    .invoice-content { font-size: 11px; line-height: 1.4; }
+    .invoice-content table { border-collapse: collapse; }
+    .invoice-content td, .invoice-content th { vertical-align: top; }
+    #itemsTable { table-layout: fixed; }
+    /* Screen styles carried over from the invoice view (default template) */
+    .summary-section table tr:first-child,
+    .summary-section table tr:nth-child(2) { border-bottom: 1px solid #d1d5db; }
+    .summary-section table tr:last-child { border-top: 2px solid #1f2937; }
+  </style>
+  <% const isNineTfox = String(templateId).indexOf('9tfox') === 0; %>
+  <%- include('../invoices/partials/invoice-styles', { isNineTfox: isNineTfox }) %>
+  <%
+    const currencySymbols = { 'KRW': '₩', 'USD': '$', 'EUR': '€', 'JPY': '¥', 'GBP': '£', 'CNY': '¥' };
+    const currency = invoice.currency || 'KRW';
+    const currencySymbol = currencySymbols[currency] || '₩';
+    function formatAmount(amount) {
+      if (currency === 'KRW' || currency === 'JPY') {
+        return currencySymbol + new Intl.NumberFormat('ko-KR').format(Math.round(amount));
+      }
+      return currencySymbol + new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
+    }
+    function nl2br(text) {
+      if (!text) return '';
+      return text.replace(/\n/g, '<br>');
+    }
+  %>
+</head>
+<body>
+  <div style="padding: 24px;">
+    <%- include('../invoices/partials/invoice-card', { invoice: invoice, items: items, selectedBankAccounts: selectedBankAccounts, templateId: templateId, formatAmount: formatAmount, nl2br: nl2br }) %>
+  </div>
+</body>
+</html>

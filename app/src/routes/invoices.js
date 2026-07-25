@@ -1,6 +1,7 @@
 const express = require('express');
 const { requireAuth } = require('../middleware/auth');
 const { getDatabase } = require('../config/database');
+const { resolveTemplateId } = require('../config/invoiceTemplates');
 
 const router = express.Router();
 
@@ -284,7 +285,8 @@ router.get('/:id', (req, res) => {
            co.logo_path, co.stamp_path,
            co.name_en as company_name_en, co.representative_en, co.address_en as company_address_en,
            co.phone_en as company_phone_en, co.email_en as company_email_en, co.bank_info_en as company_bank_info_en,
-           co.smtp_host, co.smtp_from_email, co.smtp_from_name, co.smtp_user
+           co.smtp_host, co.smtp_from_email, co.smtp_from_name, co.smtp_user,
+           co.invoice_template
     FROM invoices i
     LEFT JOIN clients c ON i.client_id = c.id
     LEFT JOIN companies co ON i.company_id = co.id
@@ -335,7 +337,9 @@ router.get('/:id', (req, res) => {
   const emailLog = db.prepare('SELECT * FROM email_log WHERE invoice_id = ? ORDER BY sent_at DESC LIMIT 10').all(req.params.id);
   const hasSmtp = !!(invoice.smtp_host && invoice.smtp_user);
 
-  res.render('invoices/view', { invoice, items, emailTemplates, emailLog, hasSmtp, selectedBankAccounts, allBankAccounts, selectedBankIds, layout: false });
+  const templateId = resolveTemplateId(invoice.invoice_template);
+
+  res.render('invoices/view', { invoice, items, emailTemplates, emailLog, hasSmtp, selectedBankAccounts, allBankAccounts, selectedBankIds, templateId, layout: false });
 });
 
 // Edit invoice form

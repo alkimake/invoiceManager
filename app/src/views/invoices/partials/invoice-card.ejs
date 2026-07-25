@@ -1,0 +1,78 @@
+<%#
+  Renders one invoice card in the selected design template. Shared by the
+  invoice view page and the template gallery preview so both stay in sync.
+  Expects locals: invoice, items, selectedBankAccounts, lang, t, templateId,
+  and the helpers formatAmount(amount), nl2br(text).
+%>
+<% const cardIsNineTfox = String(templateId).indexOf('9tfox') === 0; %>
+<div class="invoice-scale-container overflow-hidden">
+  <div class="invoice-wrapper tpl-<%= templateId %> <%= cardIsNineTfox ? 'tpl-9tfox p-0 bg-transparent' : 'bg-white dark:bg-gray-800 rounded-lg shadow p-6' %>" style="position: relative;">
+    <% if (invoice.logo_path && !cardIsNineTfox) { %>
+    <div id="logoWatermark" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.06; pointer-events: none; z-index: 0; <%= invoice.show_logo_watermark !== 1 ? 'display: none;' : '' %>">
+      <img src="<%= invoice.logo_path %>" alt="" style="max-width: 400px; max-height: 400px; width: auto; height: auto;">
+    </div>
+    <% } %>
+    <%
+      // Shared, normalized data for the 9TFox templates (bilingual issuer/client,
+      // meta, items, totals, payment rails). Ignored by the default template.
+      let tfNotes = [];
+      try { tfNotes = JSON.parse(invoice.notes || '[]'); }
+      catch (e) { tfNotes = invoice.notes ? [invoice.notes] : []; }
+      const tf = {
+        issuer: {
+          nameMain: invoice.company_name_en || invoice.company_name || '',
+          nameSub: (invoice.company_name && invoice.company_name_en && invoice.company_name !== invoice.company_name_en) ? invoice.company_name : '',
+          reg: invoice.company_business_number || '',
+          rep: lang === 'en' ? (invoice.representative_en || invoice.representative || '') : (invoice.representative || ''),
+          address: lang === 'en' ? (invoice.company_address_en || invoice.company_address || '') : (invoice.company_address || ''),
+          email: lang === 'en' ? (invoice.company_email_en || invoice.company_email || '') : (invoice.company_email || ''),
+          phone: lang === 'en' ? (invoice.company_phone_en || invoice.company_phone || '') : (invoice.company_phone || ''),
+          website: invoice.company_website || '',
+          fax: invoice.company_fax || ''
+        },
+        billTo: {
+          name: invoice.client_name || '',
+          address: invoice.client_address || '',
+          reg: invoice.client_business_number || '',
+          email: invoice.client_email || ''
+        },
+        meta: {
+          number: invoice.invoice_number || '',
+          issued: invoice.issue_date || '',
+          due: invoice.validity_period || ''
+        },
+        totals: {
+          subtotalF: formatAmount(invoice.subtotal || 0),
+          vatF: formatAmount(invoice.tax_amount || 0),
+          totalF: formatAmount(invoice.total_amount || 0),
+          taxRate: invoice.tax_rate,
+          curCode: invoice.currency || 'KRW'
+        },
+        banks: (selectedBankAccounts && selectedBankAccounts.length > 0)
+          ? selectedBankAccounts.map(function(ba) {
+              return {
+                id: ba.id,
+                name: lang === 'en' ? (ba.bank_name_en || ba.bank_name) : ba.bank_name,
+                account: ba.account_number || '',
+                swift: (ba.show_swift && ba.swift_code) ? ba.swift_code : '',
+                branch: lang === 'en' ? (ba.branch_en || ba.branch || '') : (ba.branch || '')
+              };
+            })
+          : (invoice.company_bank_info ? [{ id: 0, name: (lang === 'en' ? (invoice.company_bank_info_en || invoice.company_bank_info) : invoice.company_bank_info), account: '', swift: '', branch: '' }] : []),
+        notes: tfNotes,
+        flags: {
+          show_logo: invoice.show_logo !== 0,
+          show_stamp: invoice.show_stamp !== 0,
+          show_website: invoice.show_website !== 0,
+          show_fax: invoice.show_fax !== 0,
+          show_bank_info: invoice.show_bank_info !== 0
+        }
+      };
+    %>
+    <% if (cardIsNineTfox) { %>
+    <%- include('invoice-body-' + templateId, { formatAmount: formatAmount, nl2br: nl2br, tf: tf }) %>
+    <% } else { %>
+    <%- include('invoice-body-default', { formatAmount: formatAmount, nl2br: nl2br }) %>
+    <% } %>
+  </div>
+</div>

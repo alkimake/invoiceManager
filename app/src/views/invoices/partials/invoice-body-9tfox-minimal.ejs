@@ -1,0 +1,81 @@
+<%#
+  9TFox-Minimal (design 1C · Minimal Void).
+  Deep void, one orange hairline, three-up meta, quiet line items and a large
+  total figure. Expects locals: invoice, items, lang, t, tf, formatAmount.
+%>
+<%
+  const mvRows = items.map(function(it) {
+    let ko = it.details || '';
+    if (it.detail_mode === 'itemized' && it.subItems && it.subItems.length) {
+      ko = it.subItems.map(function(s) { return (s.title ? s.title + ' ' : '') + (s.description || ''); }).join(', ');
+    }
+    return {
+      en: it.title || '',
+      ko: (ko || '').replace(/\n/g, ' '),
+      qty: it.quantity,
+      rateF: formatAmount(it.unit_price),
+      amountF: formatAmount(it.amount)
+    };
+  });
+%>
+<div class="tf-card" style="background:#050505;padding:72px 72px 60px;">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;">
+    <div>
+      <% if (invoice.logo_path) { %>
+      <img id="headerLogo" src="<%= invoice.logo_path %>" alt="Logo" style="height:28px;width:auto;object-fit:contain;margin-bottom:10px;<%= tf.flags.show_logo ? '' : 'display:none;' %>">
+      <% } %>
+      <div class="tf-head" style="font-weight:700;font-size:22px;letter-spacing:-0.02em;color:var(--on-surface);"><%= tf.issuer.nameMain %></div>
+      <% if (tf.issuer.nameSub) { %><div style="font-size:12px;color:var(--on-surface-muted);margin-top:2px;"><%= tf.issuer.nameSub %></div><% } %>
+    </div>
+    <div style="text-align:right;">
+      <div class="tf-mono" style="font-size:11px;letter-spacing:0.5em;text-transform:uppercase;color:var(--primary);">Invoice · 청구서</div>
+      <div class="tf-mono" style="font-size:12px;color:var(--on-surface);margin-top:8px;"><%= tf.meta.number || '-' %></div>
+    </div>
+  </div>
+
+  <div style="height:1px;background:var(--primary);margin:36px 0;"></div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;font-size:12px;line-height:1.7;">
+    <div>
+      <div class="tf-label tf-label--muted" style="margin-bottom:8px;">From</div>
+      <% if (tf.issuer.reg) { %><%= t('company.business_number') %> <span class="tf-mono" style="color:var(--on-surface);"><%= tf.issuer.reg %></span><br><% } %>
+      <% if (tf.issuer.address) { %><%= tf.issuer.address.replace(/\n/g, ' ') %><br><% } %>
+      <% if (tf.issuer.email) { %><%= tf.issuer.email %><% } %>
+    </div>
+    <div>
+      <div class="tf-label tf-label--muted" style="margin-bottom:8px;">Bill To</div>
+      <span style="color:var(--on-surface);"><%= tf.billTo.name || '-' %></span>
+      <% if (tf.billTo.address) { %><br><%= tf.billTo.address.replace(/\n/g, ' ') %><% } %>
+      <% if (tf.billTo.reg) { %><br><%= tf.billTo.reg %><% } %>
+    </div>
+    <div>
+      <div class="tf-label tf-label--muted" style="margin-bottom:8px;">Dates</div>
+      <span style="color:var(--primary);">Issued</span> <%= tf.meta.issued || '-' %>
+      <% if (tf.meta.due) { %><br><span style="color:var(--primary);">Terms</span> <%= tf.meta.due %><% } %>
+    </div>
+  </div>
+
+  <div style="margin-top:48px;">
+    <% mvRows.forEach(function(it) { %>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;padding:20px 0;border-bottom:1px solid var(--hairline);gap:24px;">
+      <div style="max-width:420px;"><div style="font-size:15px;color:var(--on-surface);"><%= it.en %></div><div style="font-size:12px;color:var(--on-surface-muted);margin-top:3px;"><% if (it.ko) { %><%= it.ko %> · <% } %><%= it.qty %> @ <%= it.rateF %></div></div>
+      <div class="tf-mono" style="font-size:15px;color:var(--on-surface);"><%= it.amountF %></div>
+    </div>
+    <% }); %>
+  </div>
+
+  <div style="margin-top:36px;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;">
+    <div style="font-size:11px;color:var(--on-surface-muted);line-height:1.7;max-width:340px;">
+      VAT 부가세 <%= tf.totals.taxRate %>% · <%= tf.totals.vatF %><br>
+      <% if (tf.flags.show_bank_info && tf.banks.length > 0) { %>
+      <span id="bankInfoRow"><% tf.banks.forEach(function(b, i) { %><span class="bank-account-row" data-bank-id="<%= b.id %>"><% if (i > 0) { %><br><% } %>Wire · <%= b.name %><% if (b.swift) { %> <%= b.swift %><% } %><% if (b.account) { %> <%= b.account %><% } %></span><% }); %></span><br>
+      <% } %>
+      <% tf.notes.forEach(function(note) { %><%= (note || '').replace(/\n/g, ' ') %><br><% }); %>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--on-surface-muted);">Total Due · <%= tf.totals.curCode %></div>
+      <div class="tf-head" style="font-weight:700;font-size:44px;letter-spacing:-0.02em;color:var(--primary);line-height:1;margin-top:6px;"><%= tf.totals.totalF %></div>
+      <div style="font-size:11px;color:var(--on-surface-muted);margin-top:8px;">Subtotal <%= tf.totals.subtotalF %></div>
+    </div>
+  </div>
+</div>

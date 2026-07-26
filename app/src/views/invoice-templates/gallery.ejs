@@ -1,0 +1,141 @@
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white"><%= t('invoiceTemplate.gallery_title') %></h1>
+  <p class="text-sm text-gray-600 dark:text-gray-400 mt-1"><%= t('invoiceTemplate.gallery_desc') %></p>
+</div>
+
+<!-- Template gallery -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
+  <% templates.forEach(tpl => { %>
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden flex flex-col">
+    <a class="tpl-thumb block" href="/invoice-templates/preview/<%= tpl.id %>" target="_blank" rel="noopener" title="<%= t('invoiceTemplate.open_preview') %>">
+      <iframe src="/invoice-templates/preview/<%= tpl.id %>" loading="lazy" scrolling="no" tabindex="-1" aria-hidden="true"></iframe>
+      <span class="tpl-thumb-overlay"></span>
+    </a>
+    <div class="p-4 flex-1 flex flex-col">
+      <div class="flex items-center gap-2">
+        <h3 class="text-base font-semibold text-gray-900 dark:text-white"><%= tpl.name %></h3>
+        <% if (tpl.id === defaultTemplateId) { %>
+        <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300"><%= t('common.default') %></span>
+        <% } %>
+        <span class="ml-auto inline-block w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-600" style="background: <%= tpl.accent %>;"></span>
+      </div>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 flex-1"><%= t(tpl.descKey) %></p>
+      <div class="mt-3">
+        <a href="/invoice-templates/preview/<%= tpl.id %>" target="_blank" rel="noopener" class="text-sm text-blue-600 dark:text-blue-400 hover:underline"><%= t('invoiceTemplate.open_preview') %> →</a>
+      </div>
+    </div>
+  </div>
+  <% }) %>
+</div>
+
+<!-- Assign templates to organizations -->
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+  <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+    <h2 class="text-base font-semibold text-gray-900 dark:text-white"><%= t('invoiceTemplate.assign_title') %></h2>
+    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5"><%= t('invoiceTemplate.assign_desc') %></p>
+  </div>
+
+  <% if (companies.length === 0) { %>
+  <div class="p-6 text-center">
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-3"><%= t('company.no_companies') %></p>
+    <a href="/companies/new" class="inline-block bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700"><%= t('company.new') %></a>
+  </div>
+  <% } else { %>
+  <div class="divide-y divide-gray-100 dark:divide-gray-700">
+    <% companies.forEach(company => { %>
+    <div class="px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+      <div class="flex items-center gap-2 sm:w-1/2">
+        <span class="text-sm font-medium text-gray-900 dark:text-white"><%= company.name %></span>
+        <% if (company.is_default) { %>
+        <span class="px-2 py-0.5 text-xs rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300"><%= t('common.default') %></span>
+        <% } %>
+      </div>
+      <div class="flex items-center gap-2 sm:flex-1">
+        <select data-company-id="<%= company.id %>" onchange="assignTemplate(this)"
+          class="w-full sm:w-auto px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+          <% templates.forEach(tpl => { %>
+          <option value="<%= tpl.id %>" <%= company.invoice_template === tpl.id ? 'selected' : '' %>><%= tpl.name %></option>
+          <% }) %>
+        </select>
+        <span class="assign-status text-xs" data-for="<%= company.id %>"></span>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+  <% } %>
+</div>
+
+<style>
+  .tpl-thumb {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    overflow: hidden;
+    background: #e5e7eb;
+  }
+  .tpl-thumb iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 794px;
+    height: 1120px;
+    border: 0;
+    transform-origin: top left;
+    pointer-events: none;
+  }
+  .tpl-thumb-overlay {
+    position: absolute;
+    inset: 0;
+    background: transparent;
+  }
+  .tpl-thumb:hover .tpl-thumb-overlay {
+    background: rgba(37, 99, 235, 0.06);
+  }
+</style>
+
+<script>
+  // Scale each iframe preview (natural 794px) to fit its thumbnail box.
+  function scaleThumbs() {
+    document.querySelectorAll('.tpl-thumb').forEach(function(box) {
+      var ifr = box.querySelector('iframe');
+      if (!ifr) return;
+      var scale = box.clientWidth / 794;
+      ifr.style.transform = 'scale(' + scale + ')';
+    });
+  }
+  window.addEventListener('load', scaleThumbs);
+  window.addEventListener('resize', scaleThumbs);
+  scaleThumbs();
+
+  function assignTemplate(select) {
+    var companyId = select.getAttribute('data-company-id');
+    var statusEl = document.querySelector('.assign-status[data-for="' + companyId + '"]');
+    if (statusEl) {
+      statusEl.textContent = '<%= t("common.loading") %>';
+      statusEl.className = 'assign-status text-xs text-gray-400';
+    }
+    fetch('/invoice-templates/companies/' + companyId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ template: select.value })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!statusEl) return;
+      if (data.success) {
+        statusEl.textContent = '✓ <%= t("invoiceTemplate.saved") %>';
+        statusEl.className = 'assign-status text-xs text-green-600 dark:text-green-400';
+        setTimeout(function() { statusEl.textContent = ''; }, 2500);
+      } else {
+        statusEl.textContent = data.error || '<%= t("invoiceTemplate.save_failed") %>';
+        statusEl.className = 'assign-status text-xs text-red-600 dark:text-red-400';
+      }
+    })
+    .catch(function() {
+      if (statusEl) {
+        statusEl.textContent = '<%= t("invoiceTemplate.save_failed") %>';
+        statusEl.className = 'assign-status text-xs text-red-600 dark:text-red-400';
+      }
+    });
+  }
+</script>

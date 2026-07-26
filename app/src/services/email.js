@@ -3,6 +3,8 @@ const path = require('path');
 const fs = require('fs');
 const PDFDocument = require('pdfkit');
 const { getDatabase } = require('../config/database');
+const { resolveTemplateId } = require('../config/invoiceTemplates');
+const { render9TFoxInvoice } = require('./invoicePdf9tfox');
 
 // Font paths
 const FONT_REGULAR = path.join(__dirname, '../fonts/Pretendard-Regular.otf');
@@ -102,7 +104,8 @@ async function generateInvoicePdf(invoiceId, lang = 'ko') {
            co.bank_info as company_bank_info, co.website as company_website, co.fax as company_fax,
            co.logo_path, co.stamp_path,
            co.name_en as company_name_en, co.representative_en, co.address_en as company_address_en,
-           co.phone_en as company_phone_en, co.email_en as company_email_en, co.bank_info_en as company_bank_info_en
+           co.phone_en as company_phone_en, co.email_en as company_email_en, co.bank_info_en as company_bank_info_en,
+           co.invoice_template
     FROM invoices i
     LEFT JOIN clients c ON i.client_id = c.id
     LEFT JOIN companies co ON i.company_id = co.id
@@ -208,6 +211,29 @@ async function generateInvoicePdf(invoiceId, lang = 'ko') {
 
   const fontRegular = fs.existsSync(FONT_REGULAR) ? 'Pretendard' : 'Helvetica';
   const fontBold = fs.existsSync(FONT_BOLD) ? 'Pretendard-Bold' : 'Helvetica-Bold';
+
+  // Branded 9TFox templates use a dedicated full-bleed dark renderer.
+  const templateId = resolveTemplateId(invoice.invoice_template);
+  if (templateId !== 'default') {
+    render9TFoxInvoice(doc, {
+      templateId,
+      invoice,
+      items,
+      banks: selectedBankAccounts,
+      currency,
+      isEn,
+      L,
+      fontRegular,
+      fontBold,
+      formatAmount,
+      uploadsDir: path.join(__dirname, '../../uploads')
+    });
+    doc.end();
+    return new Promise((resolve, reject) => {
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+    });
+  }
 
   const pageWidth = doc.page.width - 60; // 30px margin each side
   const leftMargin = 30;

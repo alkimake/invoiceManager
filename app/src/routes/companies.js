@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { requireAuth } = require('../middleware/auth');
 const { getDatabase } = require('../config/database');
+const { INVOICE_TEMPLATES, resolveTemplateId } = require('../config/invoiceTemplates');
 
 const router = express.Router();
 
@@ -106,7 +107,7 @@ router.get('/', (req, res) => {
 
 // New company form
 router.get('/new', (req, res) => {
-  res.render('companies/form', { company: null, bankAccounts: [], error: null });
+  res.render('companies/form', { company: null, bankAccounts: [], templates: INVOICE_TEMPLATES, error: null });
 });
 
 // Create company
@@ -115,7 +116,7 @@ router.post('/', upload.fields([
   { name: 'stamp', maxCount: 1 }
 ]), (req, res) => {
   const db = getDatabase();
-  const { name, business_number, representative, address, phone, email, bank_info, invoice_prefix, is_default, name_en, representative_en, address_en, phone_en, email_en, bank_info_en, website, fax, smtp_host, smtp_port, smtp_secure, smtp_user, smtp_pass, smtp_from_name, smtp_from_email } = req.body;
+  const { name, business_number, representative, address, phone, email, bank_info, invoice_prefix, is_default, name_en, representative_en, address_en, phone_en, email_en, bank_info_en, website, fax, invoice_template, smtp_host, smtp_port, smtp_secure, smtp_user, smtp_pass, smtp_from_name, smtp_from_email } = req.body;
 
   const logoPath = req.files?.logo?.[0] ? '/uploads/companies/' + req.files.logo[0].filename : null;
   const stampPath = req.files?.stamp?.[0] ? '/uploads/companies/' + req.files.stamp[0].filename : null;
@@ -127,9 +128,9 @@ router.post('/', upload.fields([
     }
 
     const result = db.prepare(`
-      INSERT INTO companies (name, business_number, representative, address, phone, email, bank_info, logo_path, stamp_path, invoice_prefix, is_default, name_en, representative_en, address_en, phone_en, email_en, bank_info_en, website, fax, smtp_host, smtp_port, smtp_secure, smtp_user, smtp_pass, smtp_from_name, smtp_from_email)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(name, business_number, representative, address, phone, email, bank_info, logoPath, stampPath, invoice_prefix || 'INV', is_default ? 1 : 0, name_en, representative_en, address_en, phone_en, email_en, bank_info_en, website, fax, smtp_host || null, parseInt(smtp_port) || 587, smtp_secure ? 1 : 0, smtp_user || null, smtp_pass || null, smtp_from_name || null, smtp_from_email || null);
+      INSERT INTO companies (name, business_number, representative, address, phone, email, bank_info, logo_path, stamp_path, invoice_prefix, is_default, name_en, representative_en, address_en, phone_en, email_en, bank_info_en, website, fax, invoice_template, smtp_host, smtp_port, smtp_secure, smtp_user, smtp_pass, smtp_from_name, smtp_from_email)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(name, business_number, representative, address, phone, email, bank_info, logoPath, stampPath, invoice_prefix || 'INV', is_default ? 1 : 0, name_en, representative_en, address_en, phone_en, email_en, bank_info_en, website, fax, resolveTemplateId(invoice_template), smtp_host || null, parseInt(smtp_port) || 587, smtp_secure ? 1 : 0, smtp_user || null, smtp_pass || null, smtp_from_name || null, smtp_from_email || null);
 
     // Save bank accounts
     saveBankAccounts(db, result.lastInsertRowid, req.body);
@@ -137,7 +138,7 @@ router.post('/', upload.fields([
     res.redirect('/companies');
   } catch (err) {
     console.error('Error creating company:', err);
-    res.render('companies/form', { company: req.body, error: 'Failed to create company' });
+    res.render('companies/form', { company: req.body, bankAccounts: [], templates: INVOICE_TEMPLATES, error: 'Failed to create company' });
   }
 });
 
@@ -151,7 +152,7 @@ router.get('/:id/edit', (req, res) => {
   }
 
   const bankAccounts = db.prepare('SELECT * FROM bank_accounts WHERE company_id = ? ORDER BY sort_order ASC').all(req.params.id);
-  res.render('companies/form', { company, bankAccounts, error: null });
+  res.render('companies/form', { company, bankAccounts, templates: INVOICE_TEMPLATES, error: null });
 });
 
 // Update company
@@ -160,7 +161,7 @@ router.post('/:id', upload.fields([
   { name: 'stamp', maxCount: 1 }
 ]), (req, res) => {
   const db = getDatabase();
-  const { name, business_number, representative, address, phone, email, bank_info, invoice_prefix, is_default, name_en, representative_en, address_en, phone_en, email_en, bank_info_en, website, fax, smtp_host, smtp_port, smtp_secure, smtp_user, smtp_pass, smtp_from_name, smtp_from_email } = req.body;
+  const { name, business_number, representative, address, phone, email, bank_info, invoice_prefix, is_default, name_en, representative_en, address_en, phone_en, email_en, bank_info_en, website, fax, invoice_template, smtp_host, smtp_port, smtp_secure, smtp_user, smtp_pass, smtp_from_name, smtp_from_email } = req.body;
   const companyId = req.params.id;
 
   const existing = db.prepare('SELECT * FROM companies WHERE id = ?').get(companyId);
@@ -186,9 +187,9 @@ router.post('/:id', upload.fields([
 
     db.prepare(`
       UPDATE companies
-      SET name = ?, business_number = ?, representative = ?, address = ?, phone = ?, email = ?, bank_info = ?, logo_path = ?, stamp_path = ?, invoice_prefix = ?, is_default = ?, name_en = ?, representative_en = ?, address_en = ?, phone_en = ?, email_en = ?, bank_info_en = ?, website = ?, fax = ?, smtp_host = ?, smtp_port = ?, smtp_secure = ?, smtp_user = ?, smtp_pass = ?, smtp_from_name = ?, smtp_from_email = ?
+      SET name = ?, business_number = ?, representative = ?, address = ?, phone = ?, email = ?, bank_info = ?, logo_path = ?, stamp_path = ?, invoice_prefix = ?, is_default = ?, name_en = ?, representative_en = ?, address_en = ?, phone_en = ?, email_en = ?, bank_info_en = ?, website = ?, fax = ?, invoice_template = ?, smtp_host = ?, smtp_port = ?, smtp_secure = ?, smtp_user = ?, smtp_pass = ?, smtp_from_name = ?, smtp_from_email = ?
       WHERE id = ?
-    `).run(name, business_number, representative, address, phone, email, bank_info, logoPath, stampPath, invoice_prefix || 'INV', is_default ? 1 : 0, name_en, representative_en, address_en, phone_en, email_en, bank_info_en, website, fax, smtp_host || null, parseInt(smtp_port) || 587, smtp_secure ? 1 : 0, smtp_user || null, smtp_pass || null, smtp_from_name || null, smtp_from_email || null, companyId);
+    `).run(name, business_number, representative, address, phone, email, bank_info, logoPath, stampPath, invoice_prefix || 'INV', is_default ? 1 : 0, name_en, representative_en, address_en, phone_en, email_en, bank_info_en, website, fax, resolveTemplateId(invoice_template), smtp_host || null, parseInt(smtp_port) || 587, smtp_secure ? 1 : 0, smtp_user || null, smtp_pass || null, smtp_from_name || null, smtp_from_email || null, companyId);
 
     // Save bank accounts
     saveBankAccounts(db, companyId, req.body);
@@ -196,7 +197,7 @@ router.post('/:id', upload.fields([
     res.redirect('/companies');
   } catch (err) {
     console.error('Error updating company:', err);
-    res.render('companies/form', { company: { ...req.body, id: companyId }, error: 'Failed to update company' });
+    res.render('companies/form', { company: { ...req.body, id: companyId }, bankAccounts: [], templates: INVOICE_TEMPLATES, error: 'Failed to update company' });
   }
 });
 

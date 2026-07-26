@@ -9,6 +9,7 @@
     "companies": "Companies",
     "clients": "Clients",
     "templates": "Templates",
+    "invoice_templates": "Invoice Templates",
     "logout": "Logout",
     "bug_report": "Bug Report"
   },
@@ -194,6 +195,26 @@
     "is_default": "Include by default in new invoices",
     "default_note": "Templates marked as default will be automatically added to new invoices.",
     "no_templates": "No templates registered"
+  },
+  "invoiceTemplate": {
+    "gallery_title": "Invoice Templates",
+    "gallery_desc": "Choose the design your invoices are rendered with. Each organization can use a different template.",
+    "assign_title": "Assign to organizations",
+    "assign_desc": "The selected template is used whenever an invoice for that organization is viewed, printed, or exported.",
+    "field_label": "Invoice template",
+    "field_help": "Controls the invoice design for this organization. Browse designs in the",
+    "preview": "Preview",
+    "open_preview": "Open full preview",
+    "saved": "Saved",
+    "save_failed": "Failed to save",
+    "default_name": "Default",
+    "default_desc": "The original clean Korean-style invoice with light background and print-optimized layout.",
+    "ignition_name": "9TFox-Ignition",
+    "ignition_desc": "Bold orange header band, mono meta strip and payment rails. From the 9TFox design system.",
+    "blueprint_name": "9TFox-Blueprint",
+    "blueprint_desc": "Two-column blueprint ledger: issuer / bill-to rail beside a large INVOICE headline.",
+    "minimal_name": "9TFox-Minimal",
+    "minimal_desc": "Deep void, a single orange hairline and an oversized total figure. Quiet and editorial."
   },
   "email": {
     "smtp_settings": "Email (SMTP)",

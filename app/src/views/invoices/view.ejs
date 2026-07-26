@@ -38,6 +38,8 @@
         margin: 0 !important;
         padding: 0 !important;
       }
+      /* The default template flattens to black-on-white for print. The 9TFox
+         templates keep their branded dark design (handled in invoice-styles). */
       main {
         max-width: none !important;
         padding: 10mm 0 0 0 !important;
@@ -63,7 +65,7 @@
         padding: 0 !important;
         margin: 0 !important;
       }
-      * {
+      body.tpl-page-default * {
         color: black !important;
         background: transparent !important;
       }
@@ -187,6 +189,9 @@
       background: rgba(59, 130, 246, 0.5);
     }
   </style>
+  <% const invoiceTemplateId = (typeof templateId !== 'undefined' && templateId) ? templateId : 'default'; %>
+  <% const isNineTfox = invoiceTemplateId.indexOf('9tfox') === 0; %>
+  <%- include('partials/invoice-styles', { isNineTfox: isNineTfox }) %>
   <%
     const currencySymbols = { 'KRW': '₩', 'USD': '$', 'EUR': '€', 'JPY': '¥', 'GBP': '£', 'CNY': '¥' };
     const currency = invoice.currency || 'KRW';
@@ -203,7 +208,7 @@
     }
   %>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 min-h-screen flex flex-col transition-colors">
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen flex flex-col transition-colors tpl-page-<%= invoiceTemplateId %>">
   <nav class="sticky top-0 z-50 bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 no-print">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex flex-col sm:flex-row sm:justify-between sm:h-16 sm:items-center py-2 sm:py-0 gap-1 sm:gap-0">
@@ -337,6 +342,7 @@
       <% } %>
       <% } %>
     </div>
+    <% if (!isNineTfox) { %>
     <div class="invoice-scale-container overflow-hidden">
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 invoice-wrapper" style="position: relative;">
         <% if (invoice.logo_path) { %>
@@ -609,6 +615,9 @@
         </div>
       </div>
     </div>
+    <% } else { %>
+    <%- include('partials/invoice-card', { invoice: invoice, items: items, selectedBankAccounts: selectedBankAccounts, templateId: invoiceTemplateId, formatAmount: formatAmount, nl2br: nl2br }) %>
+    <% } %>
     <!-- Email History -->
     <% if (emailLog && emailLog.length > 0) { %>
     <div class="mt-4 no-print">

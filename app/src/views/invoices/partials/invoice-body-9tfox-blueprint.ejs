@@ -1,0 +1,105 @@
+<%#
+  9TFox-Blueprint (design 1B · Blueprint Ledger).
+  Two-column: a blueprint left rail (issuer / bill-to / wire) + a main column
+  with a large INVOICE headline, line items and totals.
+  Expects locals: invoice, items, lang, t, tf, formatAmount.
+%>
+<%
+  const bpRows = items.map(function(it, i) {
+    let ko = it.details || '';
+    if (it.detail_mode === 'itemized' && it.subItems && it.subItems.length) {
+      ko = it.subItems.map(function(s) { return (s.title ? s.title + ' ' : '') + (s.description || ''); }).join(', ');
+    }
+    return {
+      code: String(i + 1).padStart(2, '0'),
+      en: it.title || '',
+      ko: (ko || '').replace(/\n/g, ' '),
+      qty: it.quantity,
+      rateF: formatAmount(it.unit_price),
+      amountF: formatAmount(it.amount)
+    };
+  });
+%>
+<div class="tf-card" style="background:var(--surface-container);border-left:4px solid var(--primary);display:grid;grid-template-columns:250px 1fr;">
+  <!-- left rail -->
+  <div class="grid-bp" style="background-color:var(--surface-container-low);padding:48px 32px;display:flex;flex-direction:column;gap:34px;">
+    <div>
+      <% if (invoice.logo_path) { %>
+      <img id="headerLogo" src="<%= invoice.logo_path %>" alt="Logo" style="height:30px;width:auto;object-fit:contain;margin-bottom:12px;<%= tf.flags.show_logo ? '' : 'display:none;' %>">
+      <% } %>
+      <div class="tf-head" style="font-weight:700;font-size:24px;letter-spacing:-0.02em;color:var(--on-surface);"><%= tf.issuer.nameMain %></div>
+      <% if (tf.issuer.nameSub) { %><div style="font-size:12px;color:var(--on-surface-muted);margin-top:2px;"><%= tf.issuer.nameSub %></div><% } %>
+    </div>
+    <div>
+      <div class="tf-label" style="margin-bottom:8px;">From · 발행</div>
+      <div style="font-size:12px;line-height:1.75;">
+        <% if (tf.issuer.reg) { %><%= t('company.business_number') %><br><span class="tf-mono" style="color:var(--on-surface);"><%= tf.issuer.reg %></span><br><br><% } %>
+        <% if (tf.issuer.address) { %><%= tf.issuer.address.replace(/\n/g, ' ') %><br><br><% } %>
+        <% if (tf.issuer.email) { %><%= tf.issuer.email %><% } %>
+        <% if (tf.issuer.website) { %><br><span id="websiteRow"><%= tf.issuer.website %></span><% } %>
+        <% if (tf.issuer.fax) { %><br><span id="faxRow">FAX <%= tf.issuer.fax %></span><% } %>
+      </div>
+    </div>
+    <div>
+      <div class="tf-label" style="margin-bottom:8px;">Bill To · 청구</div>
+      <div style="font-size:13px;color:var(--on-surface);font-weight:600;"><%= tf.billTo.name || '-' %></div>
+      <div style="font-size:12px;line-height:1.7;margin-top:4px;">
+        <% if (tf.billTo.address) { %><%= tf.billTo.address.replace(/\n/g, ' ') %><br><% } %>
+        <% if (tf.billTo.reg) { %><%= tf.billTo.reg %><% } %>
+      </div>
+    </div>
+    <% if (tf.flags.show_bank_info && tf.banks.length > 0) { %>
+    <div id="bankInfoRow" style="margin-top:auto;">
+      <div class="tf-label tf-label--readout" style="margin-bottom:8px;">Wire · SWIFT</div>
+      <div class="tf-mono" style="font-size:11px;line-height:1.8;">
+        <% tf.banks.forEach(function(b, i) { %>
+        <span class="bank-account-row" data-bank-id="<%= b.id %>"><% if (i > 0) { %><br><% } %><%= b.name %><% if (b.swift) { %><br><%= b.swift %><% } %><% if (b.account) { %><br><%= b.account %><% } %></span>
+        <% }); %>
+      </div>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- main -->
+  <div style="padding:48px 48px 44px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;">
+      <div class="tf-head" style="font-weight:700;font-size:66px;letter-spacing:-0.04em;line-height:0.85;color:var(--on-surface);">IN<span style="color:var(--primary);">VOICE</span></div>
+      <div class="tf-mono" style="text-align:right;font-size:11px;line-height:1.9;color:var(--on-surface-variant);">
+        <div><span style="color:var(--primary);">NO</span> <%= tf.meta.number || '-' %></div>
+        <div><span style="color:var(--primary);">ISSUED</span> <%= tf.meta.issued || '-' %></div>
+        <% if (tf.meta.due) { %><div><span style="color:var(--primary);">TERMS</span> <%= tf.meta.due %></div><% } %>
+      </div>
+    </div>
+    <div style="font-size:13px;letter-spacing:0.25em;color:var(--on-surface-muted);margin-top:6px;">청구서 · KR → INTERNATIONAL</div>
+
+    <div style="margin-top:40px;">
+      <div style="display:grid;grid-template-columns:1fr 74px 120px 122px;padding-bottom:12px;font-family:var(--font-mono);font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--on-surface-muted);border-bottom:2px solid var(--primary);">
+        <div>Item · 내역</div><div style="text-align:right;">Qty</div><div style="text-align:right;">Rate</div><div style="text-align:right;">Amount</div>
+      </div>
+      <% bpRows.forEach(function(it) { %>
+      <div style="display:grid;grid-template-columns:1fr 74px 120px 122px;padding:18px 0;align-items:baseline;border-bottom:1px solid var(--hairline);">
+        <div><div style="font-size:14px;color:var(--on-surface);font-weight:500;"><span class="tf-mono" style="font-size:11px;color:var(--primary);margin-right:8px;"><%= it.code %></span><%= it.en %></div><% if (it.ko) { %><div style="font-size:12px;color:var(--on-surface-muted);margin-top:2px;padding-left:26px;"><%= it.ko %></div><% } %></div>
+        <div class="tf-mono" style="text-align:right;font-size:13px;"><%= it.qty %></div>
+        <div class="tf-mono" style="text-align:right;font-size:13px;"><%= it.rateF %></div>
+        <div class="tf-mono" style="text-align:right;font-size:14px;color:var(--on-surface);"><%= it.amountF %></div>
+      </div>
+      <% }); %>
+    </div>
+
+    <div style="margin-top:28px;display:flex;justify-content:flex-end;">
+      <div style="width:300px;">
+        <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px;"><span>Subtotal · 공급가액</span><span class="tf-mono" style="color:var(--on-surface);"><%= tf.totals.subtotalF %></span></div>
+        <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px;"><span>VAT 부가세 <%= tf.totals.taxRate %>%</span><span class="tf-mono" style="color:var(--on-surface);"><%= tf.totals.vatF %></span></div>
+        <div style="border-top:2px solid var(--primary);margin-top:10px;padding-top:14px;display:flex;justify-content:space-between;align-items:baseline;">
+          <span style="font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:var(--on-surface-muted);">Total <%= tf.totals.curCode %></span>
+          <span class="tf-head" style="font-weight:700;font-size:28px;color:var(--primary);"><%= tf.totals.totalF %></span>
+        </div>
+      </div>
+    </div>
+    <% if (tf.notes.length > 0) { %>
+    <div style="margin-top:30px;font-size:11px;color:var(--on-surface-muted);line-height:1.6;">
+      <% tf.notes.forEach(function(note, i) { %><%= i + 1 %>. <%= (note || '').replace(/\n/g, ' ') %><br><% }); %>
+    </div>
+    <% } %>
+  </div>
+</div>

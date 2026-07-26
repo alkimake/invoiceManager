@@ -1,7 +1,7 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 
-const SCHEMA_VERSION = '1.3.0';
+const SCHEMA_VERSION = '1.4.0';
 
 let db = null;
 
@@ -124,6 +124,15 @@ function initDatabase() {
   }
   try {
     db.exec(`ALTER TABLE companies ADD COLUMN fax TEXT`);
+  } catch (e) {
+    // Column already exists
+  }
+
+  // Add invoice template selection column (migration v1.4.0)
+  // Stores the invoice design template id chosen for the organization
+  // (e.g. 'default', '9tfox-classic', '9tfox-modern', '9tfox-minimal')
+  try {
+    db.exec(`ALTER TABLE companies ADD COLUMN invoice_template TEXT DEFAULT 'default'`);
   } catch (e) {
     // Column already exists
   }

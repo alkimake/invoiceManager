@@ -9,6 +9,7 @@
     "companies": "회사 정보",
     "clients": "클라이언트",
     "templates": "문구 템플릿",
+    "invoice_templates": "견적서 템플릿",
     "logout": "로그아웃",
     "bug_report": "버그 리포트"
   },
@@ -184,6 +185,26 @@
     "is_default": "새 견적서에 기본 포함",
     "default_note": "\"기본 포함\"으로 설정된 템플릿은 새 견적서 작성 시 자동으로 추가됩니다.",
     "no_templates": "등록된 템플릿이 없습니다"
+  },
+  "invoiceTemplate": {
+    "gallery_title": "견적서 템플릿",
+    "gallery_desc": "견적서를 표시할 디자인을 선택하세요. 회사마다 다른 템플릿을 사용할 수 있습니다.",
+    "assign_title": "회사별 지정",
+    "assign_desc": "선택한 템플릿은 해당 회사의 견적서를 보거나 인쇄, 내보낼 때 사용됩니다.",
+    "field_label": "견적서 템플릿",
+    "field_help": "이 회사의 견적서 디자인을 설정합니다. 디자인은 다음에서 확인하세요:",
+    "preview": "미리보기",
+    "open_preview": "전체 미리보기 열기",
+    "saved": "저장됨",
+    "save_failed": "저장 실패",
+    "default_name": "기본",
+    "default_desc": "밝은 배경과 인쇄에 최적화된 기존의 깔끔한 한국식 견적서입니다.",
+    "ignition_name": "9TFox-Ignition",
+    "ignition_desc": "강렬한 오렌지 헤더 밴드, 모노 메타 스트립과 결제 정보. 9TFox 디자인 시스템 기반.",
+    "blueprint_name": "9TFox-Blueprint",
+    "blueprint_desc": "2단 블루프린트 레이아웃: 발행/청구 정보 사이드바와 큰 INVOICE 헤드라인.",
+    "minimal_name": "9TFox-Minimal",
+    "minimal_desc": "깊은 여백, 하나의 오렌지 헤어라인, 큼직한 합계 숫자. 조용하고 편집적인 스타일."
   },
   "email": {
     "smtp_settings": "이메일 (SMTP)",

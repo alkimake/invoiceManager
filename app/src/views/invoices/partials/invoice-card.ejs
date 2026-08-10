@@ -12,12 +12,20 @@
       <img src="<%= invoice.logo_path %>" alt="" style="max-width: 400px; max-height: 400px; width: auto; height: auto;">
     </div>
     <% } %>
+    <% if (invoice.logo_path && cardIsNineTfox) { %>
+    <div id="logoWatermark" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0.05;pointer-events:none;z-index:0;<%= invoice.show_logo_watermark === 1 ? '' : 'display:none;' %>">
+      <img src="<%= invoice.logo_path %>" alt="" style="max-width:45%;max-height:45%;width:auto;height:auto;">
+    </div>
+    <% } %>
     <%
       // Shared, normalized data for the 9TFox templates (bilingual issuer/client,
       // meta, items, totals, payment rails). Ignored by the default template.
       let tfNotes = [];
       try { tfNotes = JSON.parse(invoice.notes || '[]'); }
       catch (e) { tfNotes = invoice.notes ? [invoice.notes] : []; }
+      const availableBanks = (typeof allBankAccounts !== 'undefined' && allBankAccounts && allBankAccounts.length > 0)
+        ? allBankAccounts
+        : (selectedBankAccounts || []);
       const tf = {
         issuer: {
           nameMain: invoice.company_name_en || invoice.company_name || '',
@@ -34,7 +42,8 @@
           name: invoice.client_name || '',
           address: invoice.client_address || '',
           reg: invoice.client_business_number || '',
-          email: invoice.client_email || ''
+          email: invoice.client_email || '',
+          phone: invoice.client_phone || ''
         },
         meta: {
           number: invoice.invoice_number || '',
@@ -48,24 +57,41 @@
           taxRate: invoice.tax_rate,
           curCode: invoice.currency || 'KRW'
         },
-        banks: (selectedBankAccounts && selectedBankAccounts.length > 0)
-          ? selectedBankAccounts.map(function(ba) {
+        banks: availableBanks.length > 0
+          ? availableBanks.map(function(ba) {
               return {
                 id: ba.id,
                 name: lang === 'en' ? (ba.bank_name_en || ba.bank_name) : ba.bank_name,
                 account: ba.account_number || '',
-                swift: (ba.show_swift && ba.swift_code) ? ba.swift_code : '',
-                branch: lang === 'en' ? (ba.branch_en || ba.branch || '') : (ba.branch || '')
+                swift: ba.swift_code || '',
+                branch: lang === 'en' ? (ba.branch_en || ba.branch || '') : (ba.branch || ''),
+                accountHolder: lang === 'en' ? (ba.account_holder_en || ba.account_holder || '') : (ba.account_holder || ''),
+                swiftBankBranch: ba.swift_bank_branch || '',
+                swiftBankAddress: ba.swift_bank_address || '',
+                bankCode: ba.bank_code || '',
+                iban: ba.iban_code || '',
+                swiftAccountName: ba.swift_account_name || '',
+                selected: (selectedBankAccounts || []).some(function(selected) { return selected.id === ba.id; })
               };
             })
-          : (invoice.company_bank_info ? [{ id: 0, name: (lang === 'en' ? (invoice.company_bank_info_en || invoice.company_bank_info) : invoice.company_bank_info), account: '', swift: '', branch: '' }] : []),
+          : (invoice.company_bank_info ? [{
+              id: 0,
+              name: lang === 'en' ? (invoice.company_bank_info_en || invoice.company_bank_info) : invoice.company_bank_info,
+              account: '', swift: '', branch: '', accountHolder: '', swiftBankBranch: '', swiftBankAddress: '',
+              bankCode: '', iban: '', swiftAccountName: '', selected: true
+            }] : []),
         notes: tfNotes,
         flags: {
           show_logo: invoice.show_logo !== 0,
           show_stamp: invoice.show_stamp !== 0,
+          show_tax_id: invoice.show_tax_id !== 0,
           show_website: invoice.show_website !== 0,
           show_fax: invoice.show_fax !== 0,
-          show_bank_info: invoice.show_bank_info !== 0
+          show_bank_info: invoice.show_bank_info !== 0,
+          show_swift: invoice.show_swift === 1,
+          show_account_holder: invoice.show_account_holder !== 0,
+          show_branch: invoice.show_branch === 1,
+          show_client_info: invoice.show_client_address === 1
         }
       };
     %>

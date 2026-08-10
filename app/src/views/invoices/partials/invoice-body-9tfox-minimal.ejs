@@ -24,6 +24,9 @@
       <% if (invoice.logo_path) { %>
       <img id="headerLogo" src="<%= invoice.logo_path %>" alt="Logo" style="height:28px;width:auto;object-fit:contain;margin-bottom:10px;<%= tf.flags.show_logo ? '' : 'display:none;' %>">
       <% } %>
+      <% if (invoice.stamp_path) { %>
+      <img id="stampImage" src="<%= invoice.stamp_path %>" alt="Stamp" style="height:28px;width:auto;object-fit:contain;margin:0 0 10px 8px;vertical-align:middle;<%= tf.flags.show_stamp ? '' : 'display:none;' %>">
+      <% } %>
       <div class="tf-head" style="font-weight:700;font-size:22px;letter-spacing:-0.02em;color:var(--on-surface);"><%= tf.issuer.nameMain %></div>
       <% if (tf.issuer.nameSub) { %><div style="font-size:12px;color:var(--on-surface-muted);margin-top:2px;"><%= tf.issuer.nameSub %></div><% } %>
     </div>
@@ -38,15 +41,19 @@
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;font-size:12px;line-height:1.7;">
     <div>
       <div class="tf-label tf-label--muted" style="margin-bottom:8px;">From</div>
-      <% if (tf.issuer.reg) { %><%= t('company.business_number') %> <span class="tf-mono" style="color:var(--on-surface);"><%= tf.issuer.reg %></span><br><% } %>
+      <% if (tf.issuer.reg) { %><span id="taxIdRow" style="<%= tf.flags.show_tax_id ? '' : 'display:none;' %>"><%= t('company.business_number') %> <span class="tf-mono" style="color:var(--on-surface);"><%= tf.issuer.reg %></span></span><br><% } %>
       <% if (tf.issuer.address) { %><%= tf.issuer.address.replace(/\n/g, ' ') %><br><% } %>
-      <% if (tf.issuer.email) { %><%= tf.issuer.email %><% } %>
+      <% if (tf.issuer.email) { %><%= tf.issuer.email %><% } %><% if (tf.issuer.website) { %><br><span id="websiteRow" style="<%= tf.flags.show_website ? '' : 'display:none;' %>"><%= tf.issuer.website %></span><% } %><% if (tf.issuer.fax) { %><br><span id="faxRow" style="<%= tf.flags.show_fax ? '' : 'display:none;' %>">FAX <%= tf.issuer.fax %></span><% } %>
     </div>
     <div>
       <div class="tf-label tf-label--muted" style="margin-bottom:8px;">Bill To</div>
       <span style="color:var(--on-surface);"><%= tf.billTo.name || '-' %></span>
-      <% if (tf.billTo.address) { %><br><%= tf.billTo.address.replace(/\n/g, ' ') %><% } %>
-      <% if (tf.billTo.reg) { %><br><%= tf.billTo.reg %><% } %>
+      <span class="client-info-row" style="<%= tf.flags.show_client_info ? '' : 'display:none;' %>">
+        <% if (tf.billTo.address) { %><br><%= tf.billTo.address.replace(/\n/g, ' ') %><% } %>
+        <% if (tf.billTo.reg) { %><br><span class="tf-label" style="display:inline;letter-spacing:0.08em;">Business No.</span> <%= tf.billTo.reg %><% } %>
+        <% if (tf.billTo.email) { %><br><span class="tf-label" style="display:inline;letter-spacing:0.08em;">Email</span> <%= tf.billTo.email %><% } %>
+        <% if (tf.billTo.phone) { %><br><span class="client-phone"><span class="tf-label" style="display:inline;letter-spacing:0.08em;">Tel</span> <%= tf.billTo.phone %></span><% } %>
+      </span>
     </div>
     <div>
       <div class="tf-label tf-label--muted" style="margin-bottom:8px;">Dates</div>
@@ -68,7 +75,7 @@
     <div style="font-size:11px;color:var(--on-surface-muted);line-height:1.7;max-width:340px;">
       VAT 부가세 <%= tf.totals.taxRate %>% · <%= tf.totals.vatF %><br>
       <% if (tf.flags.show_bank_info && tf.banks.length > 0) { %>
-      <span id="bankInfoRow"><% tf.banks.forEach(function(b, i) { %><span class="bank-account-row" data-bank-id="<%= b.id %>"><% if (i > 0) { %><br><% } %>Wire · <%= b.name %><% if (b.swift) { %> <%= b.swift %><% } %><% if (b.account) { %> <%= b.account %><% } %></span><% }); %></span><br>
+      <span id="bankInfoRow"><% tf.banks.forEach(function(b) { %><span class="bank-local-row" data-bank-id="<%= b.id %>" style="<%= (!b.selected || tf.flags.show_swift) ? 'display:none;' : '' %>">Wire · <%= b.name %><% if (b.branch) { %><span class="branch-info" style="<%= tf.flags.show_branch ? '' : 'display:none;' %>"> · <%= b.branch %></span><% } %><% if (b.account) { %> <%= b.account %><% } %><% if (b.accountHolder) { %><span class="holder-info" style="<%= tf.flags.show_account_holder ? '' : 'display:none;' %>"> · <%= b.accountHolder %></span><% } %></span><span class="bank-swift-row" data-bank-id="<%= b.id %>" style="<%= (!b.selected || !tf.flags.show_swift) ? 'display:none;' : '' %>">Wire · <%= b.swiftBankBranch || b.name %><% if (b.swiftBankAddress) { %> · <%= b.swiftBankAddress %><% } %><% if (b.bankCode || b.swift) { %> · <%= b.bankCode || b.swift %><% if (b.bankCode && b.swift && b.bankCode !== b.swift) { %> / <%= b.swift %><% } %><% } %><% if (b.account) { %> · <%= b.account %><% if (b.iban && b.iban !== b.account) { %> / <%= b.iban %><% } %><% } %></span><% }); %></span><br>
       <% } %>
       <% tf.notes.forEach(function(note) { %><%= (note || '').replace(/\n/g, ' ') %><br><% }); %>
     </div>

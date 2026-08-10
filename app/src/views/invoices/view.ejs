@@ -616,7 +616,7 @@
       </div>
     </div>
     <% } else { %>
-    <%- include('partials/invoice-card', { invoice: invoice, items: items, selectedBankAccounts: selectedBankAccounts, templateId: invoiceTemplateId, formatAmount: formatAmount, nl2br: nl2br }) %>
+    <%- include('partials/invoice-card', { invoice: invoice, items: items, selectedBankAccounts: selectedBankAccounts, allBankAccounts: allBankAccounts, templateId: invoiceTemplateId, formatAmount: formatAmount, nl2br: nl2br }) %>
     <% } %>
     <!-- Email History -->
     <% if (emailLog && emailLog.length > 0) { %>

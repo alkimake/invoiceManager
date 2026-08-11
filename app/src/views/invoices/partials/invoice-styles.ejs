@@ -79,7 +79,29 @@
 
   /* ---- Print: preserve the branded dark design ---- */
   @media print {
-    body[class*="tpl-page-9tfox"] { background: #ffffff !important; }
+    <% if (typeof isNineTfox !== 'undefined' && isNineTfox) { %>
+    @page { size: A4; margin: 0; }
+
+    html,
+    body[class*="tpl-page-9tfox"] {
+      width: 210mm !important;
+      min-height: 297mm !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #0a0a0a !important;
+    }
+    body[class*="tpl-page-9tfox"] main,
+    body[class*="tpl-page-9tfox"] .tf-print-full-bleed,
+    body[class*="tpl-page-9tfox"] .tf-print-a4-card {
+      width: 100% !important;
+      min-width: 0 !important;
+      min-height: 297mm !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      box-sizing: border-box !important;
+    }
+    <% } %>
+    body[class*="tpl-page-9tfox"] { background: #0a0a0a !important; }
     .tpl-9tfox, .tpl-9tfox * {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;

@@ -5,8 +5,8 @@
   and the helpers formatAmount(amount), nl2br(text).
 %>
 <% const cardIsNineTfox = String(templateId).indexOf('9tfox') === 0; %>
-<div class="invoice-scale-container overflow-hidden">
-  <div class="invoice-wrapper tpl-<%= templateId %> <%= cardIsNineTfox ? 'tpl-9tfox p-0 bg-transparent' : 'bg-white dark:bg-gray-800 rounded-lg shadow p-6' %>" style="position: relative;">
+<div class="invoice-scale-container overflow-hidden<%= cardIsNineTfox ? ' tf-print-full-bleed' : '' %>">
+  <div class="invoice-wrapper tpl-<%= templateId %> <%= cardIsNineTfox ? 'tpl-9tfox p-0 bg-transparent tf-print-a4-card' : 'bg-white dark:bg-gray-800 rounded-lg shadow p-6' %>" style="position: relative;">
     <% if (invoice.logo_path && !cardIsNineTfox) { %>
     <div id="logoWatermark" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.06; pointer-events: none; z-index: 0; <%= invoice.show_logo_watermark !== 1 ? 'display: none;' : '' %>">
       <img src="<%= invoice.logo_path %>" alt="" style="max-width: 400px; max-height: 400px; width: auto; height: auto;">

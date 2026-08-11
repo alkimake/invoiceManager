@@ -53,3 +53,9 @@ test('9tfox ignition uses the compact payment-footer layout', () => {
   assert.match(html, /class="[^\"]*tf-ignition-bill-to/);
   assert.match(html, /class="[^\"]*tf-payment-footer/);
 });
+
+test('9tfox templates expose full-bleed A4 print hooks', () => {
+  const html = renderTemplate('9tfox-ignition');
+  assert.match(html, /class="[^\"]*tf-print-full-bleed/);
+  assert.match(html, /class="[^\"]*tf-print-a4-card/);
+});

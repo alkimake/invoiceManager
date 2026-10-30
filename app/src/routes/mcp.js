@@ -11,7 +11,7 @@ const { version } = require('../../package.json');
 
 const router = express.Router();
 
-const INSTRUCTIONS = `Invoice Manager: create and manage Korean-style quotations (견적서).
+const INSTRUCTIONS = `Invoice Manager: create and manage invoices / quotations.
 
 Workflow for writing a new invoice:
 1. Usually skip list_companies: the default company is used when company_id is omitted.
@@ -23,7 +23,8 @@ Rules:
 - New invoices are always "draft". Only call set_invoice_status with "confirmed" when the user explicitly asks.
 - There is no delete; use set_invoice_status "discarded" instead.
 - update_invoice with items replaces ALL items. To change one item, get_invoice first, edit the list, and send the full list.
-- Default currency is KRW with 10% VAT (tax_rate). Use tax_rate 0 when the user says VAT is excluded or not applicable.
+- Default currency is USD with no tax (tax_rate 0). Only set currency or tax_rate when the user asks for a different one (e.g. KRW with 10% VAT for domestic Korean clients).
+- Display options (logo, stamp, SWIFT, PayPal, ...) are copied from the company's most recent invoice; they can be changed in the web UI.
 - Write item titles and details in the user's language unless asked otherwise.`;
 
 const subItemSchema = z.object({
@@ -57,9 +58,9 @@ const invoiceFields = {
   client_id: z.number().int().nullable().optional().describe('Existing client ID (from search_clients). Do not combine with client'),
   client: clientSchema.optional().describe('Client to find by exact name or create. Do not combine with client_id'),
   issue_date: z.string().optional().describe('YYYY-MM-DD. Default today'),
-  validity_period: z.string().optional().describe('Default "견적일로부터 1개월"'),
-  currency: z.enum(api.CURRENCIES).optional().describe('Default KRW'),
-  tax_rate: z.number().optional().describe('VAT percent. Default 10; 0 for no VAT'),
+  validity_period: z.string().optional().describe('Default "1 month from issue date"'),
+  currency: z.enum(api.CURRENCIES).optional().describe('Default USD'),
+  tax_rate: z.number().optional().describe('Tax/VAT percent. Default 0 (no tax); e.g. 10 for Korean VAT'),
   notes: z.array(z.string()).optional().describe('Note texts. Omit for default note templates, [] for none'),
   invoice_number: z.string().optional().describe('Omit to auto-generate')
 };

@@ -10,6 +10,11 @@ const INVOICE_FIELDS = ['invoice_number', 'company_id', 'client_id', 'client', '
 const CLIENT_FIELDS = ['name', 'business_number', 'contact_person', 'phone', 'email', 'address'];
 // amount / detail_mode are read-only (computed) but accepted so GET output can be sent back as-is
 const ITEM_FIELDS = ['title', 'details', 'quantity', 'unit_price', 'sub_items', 'amount', 'detail_mode'];
+// Per-invoice display options (set in the web view), carried over from the company's last invoice
+const DISPLAY_FIELDS = ['show_logo', 'show_stamp', 'show_tax_id', 'show_website', 'show_fax', 'show_bank_info', 'show_logo_watermark',
+  'show_swift', 'show_paypal', 'show_account_holder', 'show_branch', 'show_client_address', 'column_widths'];
+const DEFAULT_CURRENCY = 'USD';
+const DEFAULT_TAX_RATE = 0;
 const SUB_ITEM_FIELDS = ['title', 'description', 'quantity', 'unit_price', 'amount'];
 
 class ApiError extends Error {
@@ -300,6 +305,17 @@ function getInvoice(id) {
   return invoice;
 }
 
+function copyDisplayOptions(db, invoiceId, companyId) {
+  if (!companyId) return;
+  const last = db.prepare(`
+    SELECT ${DISPLAY_FIELDS.join(', ')} FROM invoices
+    WHERE company_id = ? AND id != ? ORDER BY id DESC LIMIT 1
+  `).get(companyId, invoiceId);
+  if (!last) return;
+  db.prepare(`UPDATE invoices SET ${DISPLAY_FIELDS.map(f => `${f} = ?`).join(', ')} WHERE id = ?`)
+    .run(...DISPLAY_FIELDS.map(f => last[f]), invoiceId);
+}
+
 function createInvoice(body) {
   const db = getDatabase();
   validateInvoiceBody(db, body, { partial: false });
@@ -328,7 +344,7 @@ function createInvoice(body) {
       ? body.notes
       : db.prepare('SELECT content FROM note_templates WHERE is_default = 1 ORDER BY sort_order ASC').all().map(n => n.content);
 
-    const taxRate = body.tax_rate ?? 10;
+    const taxRate = body.tax_rate ?? DEFAULT_TAX_RATE;
     const { items, subtotal } = prepareItems(toRawItems(body.items));
     const { taxAmount, totalAmount } = computeTotals(subtotal, taxRate);
 
@@ -338,11 +354,12 @@ function createInvoice(body) {
     `).run(
       invoiceNumber, companyId, clientId, body.project_name.trim(),
       body.issue_date || new Date().toISOString().split('T')[0],
-      body.validity_period ?? t('ko', 'invoice.validity_default'),
-      subtotal, taxRate, taxAmount, totalAmount, JSON.stringify(notes), body.currency || 'KRW'
+      body.validity_period ?? t('en', 'invoice.validity_default'),
+      subtotal, taxRate, taxAmount, totalAmount, JSON.stringify(notes), body.currency || DEFAULT_CURRENCY
     );
 
     const id = result.lastInsertRowid;
+    copyDisplayOptions(db, id, companyId);
     insertItems(db, id, items);
     linkDefaultBankAccounts(db, id, companyId);
     return id;

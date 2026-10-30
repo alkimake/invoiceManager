@@ -48,11 +48,13 @@
 | `client_id` | integer \| null | | null | 기존 거래처 ID. `client`와 동시 사용 불가 |
 | `client` | object | | | `{ name, business_number?, contact_person?, phone?, email?, address? }` — 이름이 **정확히** 일치하는 거래처가 있으면 그것을 사용하고, 없으면 새로 생성 |
 | `issue_date` | string | | 오늘 | 견적일 `YYYY-MM-DD` |
-| `validity_period` | string | | `"견적일로부터 1개월"` | 유효기간 문구 |
-| `currency` | string | | `"KRW"` | `KRW` `USD` `EUR` `JPY` `GBP` `CNY` 중 하나 |
-| `tax_rate` | number | | `10` | 부가세율(%). 부가세 없음은 `0` |
+| `validity_period` | string | | `"1 month from issue date"` | 유효기간 문구 |
+| `currency` | string | | `"USD"` | `KRW` `USD` `EUR` `JPY` `GBP` `CNY` 중 하나 |
+| `tax_rate` | number | | `0` | 부가세율(%). 국내 부가세는 `10` |
 | `notes` | string[] | | 기본 비고 템플릿 | 비고 문구 목록. 생략 시 기본(`is_default`) 비고 템플릿이 들어감. 비고 없이 하려면 `[]` |
 | `invoice_number` | string | | 자동 생성 | 견적번호. 생략 시 `{회사 prefix}-{연도}-{4자리 순번}` 자동 생성. 중복 시 `409` |
+
+표시 옵션(로고, 직인, SWIFT, PayPal, 열 너비 등)은 같은 회사의 가장 최근 견적서에서 복사됩니다.
 
 #### Item — 두 가지 형태 중 하나
 
@@ -365,11 +367,13 @@ This document is written so it can be handed to an AI agent as-is.
 | `client_id` | integer \| null | | null | Existing client ID. Cannot be combined with `client` |
 | `client` | object | | | `{ name, business_number?, contact_person?, phone?, email?, address? }` — uses the client whose name matches **exactly**, or creates a new one if none exists |
 | `issue_date` | string | | today | Issue date `YYYY-MM-DD` |
-| `validity_period` | string | | `"견적일로부터 1개월"` | Validity period text (e.g. `"1 month from issue date"`) |
-| `currency` | string | | `"KRW"` | One of `KRW` `USD` `EUR` `JPY` `GBP` `CNY` |
-| `tax_rate` | number | | `10` | VAT rate (%). Use `0` for no VAT |
+| `validity_period` | string | | `"1 month from issue date"` | Validity period text |
+| `currency` | string | | `"USD"` | One of `KRW` `USD` `EUR` `JPY` `GBP` `CNY` |
+| `tax_rate` | number | | `0` | Tax/VAT rate (%). Use `10` for Korean VAT |
 | `notes` | string[] | | default note templates | List of note texts. If omitted, the default (`is_default`) note templates are used. Send `[]` for no notes |
 | `invoice_number` | string | | auto-generated | Invoice number. If omitted, generated as `{company prefix}-{year}-{4-digit sequence}`. `409` if it already exists |
+
+Display options (logo, stamp, SWIFT, PayPal, column widths, ...) are copied from the company's most recent invoice.
 
 #### Item — one of two forms
 
